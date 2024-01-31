@@ -17,9 +17,7 @@ func MapServiceErrorToAPIError(err error) APIError {
 	// Check if the error is of type Error
 	if svcError, ok := err.(Error); ok {
 		apiError.Message = svcError.AppError().Error()
-
-		// Use a type switch for the service error
-		switch err := svcError.SvcError(); err {
+		switch svcError.SvcError() {
 		case ErrBadRequest:
 			apiError.Status = http.StatusBadRequest
 		case ErrNotFound:
@@ -29,6 +27,10 @@ func MapServiceErrorToAPIError(err error) APIError {
 		case ErrUnauthorized:
 			apiError.Status = http.StatusUnauthorized
 		}
+	} else {
+		// If not, treat it as a generic internal server error
+		apiError.Message = err.Error()
+		apiError.Status = http.StatusInternalServerError
 	}
 
 	return apiError
